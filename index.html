@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotional Fashion Color Advisor</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #059669;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #64748b;
+            --error: #dc2626;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background-color: var(--light);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            background: linear-gradient(90deg, #2563eb, #059669);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .description {
+            font-size: 1.1rem;
+            color: var(--gray);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .search-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 3rem;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .search-box {
+            display: flex;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        
+        #keyword {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+        
+        #keyword:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        #search-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        #search-btn:hover {
+            background-color: #1d4ed8;
+            transform: translateY(-1px);
+        }
+        
+        .examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: center;
+        }
+        
+        .example-tag {
+            padding: 0.5rem 1rem;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .example-tag:hover {
+            background-color: #cbd5e1;
+            transform: translateY(-1px);
+        }
+        
+        .error-message {
+            color: var(--error);
+            text-align: center;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-weight: 600;
+            display: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner {
+            width: 3rem;
+            height: 3rem;
+            border: 4px solid rgba(37, 99, 235, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .results {
+            display: none;
+        }
+        
+        .results-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .results-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .results-count {
+            color: var(--gray);
+        }
+        
+        .palettes {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .palette {
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+        
+        .palette:hover {
+            transform: translateY(-0.25rem);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .palette-name {
+            padding: 1.25rem;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .palette-colors {
+            display: flex;
+            height: 8rem;
+        }
+        
+        .color {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 0.75rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .color:hover {
+            flex: 1.2;
+            z-index: 1;
+        }
+        
+        .color::after {
+            content: 'Click to copy';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .color:hover::after {
+            opacity: 1;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            grid-column: 1 / -1;
+            color: var(--gray);
+        }
+        
+        .fashion-advice {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            margin-top: 2rem;
+        }
+        
+        .fashion-advice h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .fashion-advice-content {
+            line-height: 1.8;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .search-box {
+                flex-direction: column;
+            }
+            
+            #keyword {
+                margin-bottom: 1rem;
+                width: 100%;
+            }
+            
+            #search-btn {
+                position: static;
+                width: 100%;
+            }
+            
+            .palettes {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Emotional Fashion Color Advisor</h1>
+            <p class="description">Discover color palettes that match your mood and get personalized fashion advice based on emotional colors.</p>
+        </header>
+        
+        <div class="search-section">
+            <div class="search-box">
+                <input type="text" id="keyword" placeholder="Enter an emotion (e.g. happy, sad, calm)">
+                <button id="search-btn" onclick="searchPalettes()">Get Fashion Advice</button>
+            </div>
+            
+            <div class="examples">
+                <div class="example-tag" onclick="setExample('happy')">Happy</div>
+                <div class="example-tag" onclick="setExample('sad')">Sad</div>
+                <div class="example-tag" onclick="setExample('calm')">Calm</div>
+                <div class="example-tag" onclick="setExample('energetic')">Energetic</div>
+                <div class="example-tag" onclick="setExample('romantic')">Romantic</div>
+                <div class="example-tag" onclick="setExample('mysterious')">Mysterious</div>
+                <div class="example-tag" onclick="setExample('confident')">Confident</div>
+                <div class="example-tag" onclick="setExample('peaceful')">Peaceful</div>
+            </div>
+            
+            <div id="error" class="error-message"></div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Finding color palettes and fashion advice for "<span id="search-term"></span>"...</p>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="results-header">
+                <h2 class="results-title" id="results-title">Color Palettes for <span id="emotion-display"></span></h2>
+                <p class="results-count" id="results-count"></p>
+            </div>
+            
+            <div class="palettes" id="palettes-container"></div>
+            
+            <div class="fashion-advice" id="fashion-advice">
+                <h3>Fashion Advice for <span id="advice-emotion"></span></h3>
+                <div class="fashion-advice-content" id="fashion-advice-content"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DeepSeek API configuration (for local testing)
+        const DEEPSEEK_API_KEY = 'sk-ec7e56cdf35f48e7b28590c2a5f85090'; // Replace with your actual API key
+        const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
+        
+        function setExample(emotion) {
+            document.getElementById('keyword').value = emotion;
+            searchPalettes();
+        }
+        
+        async function getFashionAdvice(emotion, colors = []) {
+            const fashionAdviceContent = document.getElementById('fashion-advice-content');
+            const adviceEmotion = document.getElementById('advice-emotion');
+            
+            adviceEmotion.textContent = emotion;
+            fashionAdviceContent.innerHTML = '<p>Generating fashion advice...</p>';
+            
+            try {
+                let prompt;
+                if (colors.length > 0) {
+                    const colorList = colors.join(', ');
+                    prompt = `Provide a detailed fashion advice based on the emotion "${emotion}" and these color palette: ${colorList}. 
+                    Suggest what color to use for tops, what colors would work well for bottoms, and what accessories would complement this look. 
+                    Also suggest suitable styles and materials that match this emotion. Format the response in clear paragraphs.`;
+                } else {
+                    prompt = `Provide a detailed fashion advice based on the emotion "${emotion}". 
+                    Suggest color combinations, styles, and materials that would best represent this emotion. 
+                    Include recommendations for tops, bottoms, and accessories. Format the response in clear paragraphs.`;
+                }
+                
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: [
+                            {
+                                role: 'user',
+                                content: prompt
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to get fashion advice');
+                }
+                
+                const data = await response.json();
+                const advice = data.choices[0].message.content;
+                
+                fashionAdviceContent.innerHTML = advice.replace(/\n/g, '<br>');
+                
+            } catch (error) {
+                console.error('Error getting fashion advice:', error);
+                fashionAdviceContent.innerHTML = `<p>Could not generate fashion advice. Here's a general suggestion: For ${emotion} moods, consider soft pastels for calm emotions or vibrant colors for energetic feelings. Choose flowing fabrics for relaxed moods and structured pieces for confident emotions.</p>`;
+            }
+        }
+        
+        async function searchPalettes() {
+            const keyword = document.getElementById('keyword').value.trim().toLowerCase();
+            const errorElement = document.getElementById('error');
+            const resultsSection = document.getElementById('results');
+            const loadingSection = document.getElementById('loading');
+            const searchTermElement = document.getElementById('search-term');
+            const resultsTitle = document.getElementById('results-title');
+            const emotionDisplay = document.getElementById('emotion-display');
+            const resultsCount = document.getElementById('results-count');
+            const palettesContainer = document.getElementById('palettes-container');
+            const fashionAdviceSection = document.getElementById('fashion-advice');
+            
+            if (!keyword) {
+                errorElement.textContent = 'Please enter an emotion';
+                errorElement.style.display = 'block';
+                resultsSection.style.display = 'none';
+                loadingSection.style.display = 'none';
+                return;
+            }
+            
+            errorElement.style.display = 'none';
+            resultsSection.style.display = 'none';
+            loadingSection.style.display = 'block';
+            searchTermElement.textContent = keyword;
+            emotionDisplay.textContent = keyword;
+            palettesContainer.innerHTML = '';
+            
+            try {
+                const response = await fetch('/get_palettes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `keyword=${encodeURIComponent(keyword)}`
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const data = await response.json();
+                loadingSection.style.display = 'none';
+                
+                if (data.error) {
+                    errorElement.textContent = data.error;
+                    errorElement.style.display = 'block';
+                    
+                    // Get fashion advice even if no colors found
+                    await getFashionAdvice(keyword);
+                    resultsSection.style.display = 'block';
+                    return;
+                }
+                
+                resultsTitle.textContent = `Color Palettes for ${data.keyword}`;
+                resultsCount.textContent = `Found ${data.palettes.length} palette${data.palettes.length !== 1 ? 's' : ''}`;
+                
+                if (data.palettes.length === 0) {
+                    palettesContainer.innerHTML = 
+                        `<div class="empty-state">
+                            <p>No specific palettes found for "${data.keyword}". Here's general fashion advice for this emotion.</p>
+                        </div>`;
+                } else {
+                    data.palettes.forEach((palette, index) => {
+                        const paletteElement = document.createElement('div');
+                        paletteElement.className = 'palette';
+                        
+                        const paletteName = document.createElement('div');
+                        paletteName.className = 'palette-name';
+                        paletteName.textContent = `Palette ${index + 1}`;
+                        paletteElement.appendChild(paletteName);
+                        
+                        const paletteColors = document.createElement('div');
+                        paletteColors.className = 'palette-colors';
+                        
+                        palette.forEach(color => {
+                            const colorElement = document.createElement('div');
+                            colorElement.className = 'color';
+                            colorElement.style.backgroundColor = color;
+                            colorElement.textContent = color;
+                            
+                            colorElement.addEventListener('click', () => {
+                                navigator.clipboard.writeText(color).then(() => {
+                                    const originalText = colorElement.textContent;
+                                    colorElement.textContent = 'Copied!';
+                                    setTimeout(() => {
+                                        colorElement.textContent = originalText;
+                                    }, 1000);
+                                });
+                            });
+                            
+                            paletteColors.appendChild(colorElement);
+                        });
+                        
+                        paletteElement.appendChild(paletteColors);
+                        palettesContainer.appendChild(paletteElement);
+                    });
+                }
+                
+                // Get fashion advice with the first palette (or none if no palettes)
+                const colorsForAdvice = data.palettes.length > 0 ? data.palettes[0] : [];
+                await getFashionAdvice(keyword, colorsForAdvice);
+                
+                resultsSection.style.display = 'block';
+                
+            } catch (error) {
+                loadingSection.style.display = 'none';
+                errorElement.textContent = 'An error occurred. Showing general fashion advice.';
+                errorElement.style.display = 'block';
+                console.error('Error:', error);
+                
+                // Try to get fashion advice anyway
+                await getFashionAdvice(keyword);
+                resultsSection.style.display = 'block';
+            }
+        }
+        
+        // Allow pressing Enter to search
+        document.getElementById('keyword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchPalettes();
+            }
+        });
+    </script>
+</body>
+</html>
